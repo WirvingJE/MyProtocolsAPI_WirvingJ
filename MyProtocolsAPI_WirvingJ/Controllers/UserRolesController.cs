@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MyProtocolsAPI_WirvingJ.Attributes;
 using MyProtocolsAPI_WirvingJ.Models;
 
 namespace MyProtocolsAPI_WirvingJ.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiKey]
     public class UserRolesController : ControllerBase
     {
         private readonly MyProtocolsDBContext _context;
@@ -95,25 +97,7 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
             return CreatedAtAction("GetUserRole", new { id = userRole.UserRoleId }, userRole);
         }
 
-        // DELETE: api/UserRoles/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserRole(int id)
-        {
-            if (_context.UserRoles == null)
-            {
-                return NotFound();
-            }
-            var userRole = await _context.UserRoles.FindAsync(id);
-            if (userRole == null)
-            {
-                return NotFound();
-            }
-
-            _context.UserRoles.Remove(userRole);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
+       
 
         private bool UserRoleExists(int id)
         {
