@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyProtocolsAPI_WirvingJ.Attributes;
 using MyProtocolsAPI_WirvingJ.Models;
+using MyProtocolsAPI_WirvingJ.ModelsDTOs;
 
 namespace MyProtocolsAPI_WirvingJ.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-   // [ApiKey]
+    // [ApiKey]
     public class UsersController : ControllerBase
     {
         private readonly MyProtocolsDBContext _context;
@@ -21,7 +22,6 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         {
             _context = context;
         }
-
 
         //Este get valida el usuario que quiere ingresar en la app. 
         //GET: api/Users
@@ -45,10 +45,10 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-          if (_context.Users == null)
-          {
-              return NotFound();
-          }
+            if (_context.Users == null)
+            {
+                return NotFound();
+            }
             return await _context.Users.ToListAsync();
         }
 
@@ -56,10 +56,10 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
-          if (_context.Users == null)
-          {
-              return NotFound();
-          }
+            if (_context.Users == null)
+            {
+                return NotFound();
+            }
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -68,6 +68,60 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
             }
 
             return user;
+        }
+
+
+        [HttpGet("GetUserInfoByEmail")]
+        public ActionResult<IEnumerable<UserDTO>> GetUserInfoByEmail(string Pemail)
+        {
+
+            var query = (from u in _context.Users
+                         join ur in _context.UserRoles on
+                         u.UserRoleId equals ur.UserRoleId
+                         where u.Email == Pemail && u.Active == true &&
+                         u.IsBlocked == false
+                         select new
+                         {
+                             idusuario = u.UserId,
+                             correo = u.Email,
+                             contrasennia = u.Password,
+                             nombre = u.Name,
+                             correorespaldo = u.BackUpEmail,
+                             telefono = u.PhoneNumber,
+                             direccion = u.Address,
+                             activo = u.Active,
+                             establoqueado = u.IsBlocked,
+                             idrol = ur.UserRoleId,
+                             descripcionrol = ur.Description
+                         }).ToList();
+
+            //creamos un objeto del tipo que retorna la función 
+            List<UserDTO> list = new List<UserDTO>();
+
+            foreach (var item in query)
+            {
+                UserDTO NewItem = new UserDTO()
+                {
+                    IDUsuario = item.idusuario,
+                    Correo = item.correo,
+                    Contrasennia = item.contrasennia,
+                    Nombre = item.nombre,
+                    CorreoRespaldo = item.correorespaldo,
+                    Telefono = item.telefono,
+                    Direccion = item.direccion,
+                    Activo = item.activo,
+                    EstaBloqueado = item.establoqueado,
+                    IDRol = item.idrol,
+                    DescripcionRol = item.descripcionrol
+                };
+
+                list.Add(NewItem);
+            }
+
+            if (list == null) { return NotFound(); }
+
+            return list;
+
         }
 
         // PUT: api/Users/5
@@ -106,17 +160,17 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
-          if (_context.Users == null)
-          {
-              return Problem("Entity set 'MyProtocolsDBContext.Users'  is null.");
-          }
+
+            if (_context.Users == null)
+            {
+                return Problem("Entity set 'MyProtocolsDBContext.Users'  is null.");
+            }
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetUser", new { id = user.UserId }, user);
         }
 
-        
 
         private bool UserExists(int id)
         {
