@@ -74,6 +74,8 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         [HttpGet("GetUserInfoByEmail")]
         public ActionResult<IEnumerable<UserDTO>> GetUserInfoByEmail(string Pemail)
         {
+            //acá creamos un linq que combina información de dos entidades 
+            //(user inner join userrole) y la agreaga en el objeto dto de usuario 
 
             var query = (from u in _context.Users
                          join ur in _context.UserRoles on
@@ -127,14 +129,30 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser(int id, UserDTO user)
         {
-            if (id != user.UserId)
+            if (id != user.IDUsuario)
             {
                 return BadRequest();
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            //tenemos que hacer la conversión entre el DTO que llega en formato 
+            //json (en el header) y el objeto que entity framework entiende que es de
+            //tipo User
+
+            User? NewEFUser = GetUserByID(id);
+
+            if (NewEFUser != null)
+            {
+                NewEFUser.Email = user.Correo;
+                NewEFUser.Name = user.Nombre;
+                NewEFUser.BackUpEmail = user.CorreoRespaldo;
+                NewEFUser.PhoneNumber = user.Telefono;
+                NewEFUser.Address = user.Direccion;
+
+                _context.Entry(NewEFUser).State = EntityState.Modified;
+
+            }
 
             try
             {
@@ -152,7 +170,7 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Users
@@ -176,5 +194,15 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
         {
             return (_context.Users?.Any(e => e.UserId == id)).GetValueOrDefault();
         }
+
+        private User? GetUserByID(int id)
+        {
+            var user = _context.Users.Find(id);
+
+            //var user = _context.Users?.Any(e => e.UserId == id);
+
+            return user;
+        }
+
     }
 }
