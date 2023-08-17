@@ -149,6 +149,7 @@ namespace MyProtocolsAPI_WirvingJ.Controllers
                 NewEFUser.BackUpEmail = user.CorreoRespaldo;
                 NewEFUser.PhoneNumber = user.Telefono;
                 NewEFUser.Address = user.Direccion;
+                NewEFUser.Password = user.Contrasennia;
 
                 _context.Entry(NewEFUser).State = EntityState.Modified;
 
